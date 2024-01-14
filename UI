@@ -1,0 +1,163 @@
+-- Acery UI Library
+
+local AceryUI = {}
+
+function AceryUI:CreateUI(userSettings)
+    userSettings = userSettings or {}
+    
+    local ui = {}
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = userSettings.WindowName or "AceryMainFrame"
+    mainFrame.Size = UDim2.new(0, 400, 0, 500)
+    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -250)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(64, 64, 64)
+    mainFrame.BorderSizePixel = 0
+
+    local minimizeButton = Instance.new("TextButton")
+    minimizeButton.Name = "MinimizeButton"
+    minimizeButton.Size = UDim2.new(0, 30, 0, 30)
+    minimizeButton.Position = UDim2.new(1, -30, 0, 0)
+    minimizeButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    minimizeButton.BorderSizePixel = 0
+    minimizeButton.Text = "-"
+    minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeButton.TextSize = 20
+    minimizeButton.Parent = mainFrame
+
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = mainFrame
+
+    local titleText = Instance.new("TextLabel")
+    titleText.Name = "TitleText"
+    titleText.Size = UDim2.new(1, 0, 1, 0)
+    titleText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    titleText.BorderSizePixel = 0
+    titleText.Text = userSettings.WindowName or "Acery UI Library"
+    titleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleText.TextSize = 18
+    titleText.Parent = titleBar
+
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Name = "ContentFrame"
+    contentFrame.Size = UDim2.new(1, 0, 1, -30)
+    contentFrame.Position = UDim2.new(0, 0, 0, 30)
+    contentFrame.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    contentFrame.BorderSizePixel = 0
+    contentFrame.Parent = mainFrame
+
+    local isMinimized = false
+
+    minimizeButton.MouseButton1Click:Connect(function()
+        if isMinimized then
+            mainFrame.Size = UDim2.new(0, 400, 0, 500)
+            minimizeButton.Text = "-"
+        else
+            mainFrame.Size = UDim2.new(0, 30, 0, 30)
+            minimizeButton.Text = "+"
+        end
+        isMinimized = not isMinimized
+    end)
+
+    function ui:MakeButton(options)
+        local button = Instance.new("TextButton")
+        button.Name = options.Name or "UnnamedButton"
+        button.Size = UDim2.new(0, 150, 0, 50)
+        button.Position = UDim2.new(0.5, -75, 0.5, -25)
+        button.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        button.BorderSizePixel = 0
+        button.Text = options.Text or "Button"
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button.Parent = contentFrame
+
+        if options.Callback then
+            button.MouseButton1Click:Connect(options.Callback)
+        end
+
+        return button
+    end
+
+    function ui:MakeToggle(options)
+        local toggle = Instance.new("TextButton")
+        toggle.Name = options.Name or "UnnamedToggle"
+        toggle.Size = UDim2.new(0, 150, 0, 50)
+        toggle.Position = UDim2.new(0.5, -75, 0.5, -75)
+        toggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        toggle.BorderSizePixel = 0
+        toggle.Text = options.Text or "Toggle"
+        toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+        toggle.Parent = contentFrame
+
+        local isToggled = false
+
+        toggle.MouseButton1Click:Connect(function()
+            isToggled = not isToggled
+            if isToggled then
+                toggle.Text = "ON"
+                toggle.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            else
+                toggle.Text = "OFF"
+                toggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+            end
+
+            if options.Callback then
+                options.Callback(isToggled)
+            end
+        end)
+
+        return toggle
+    end
+
+    function ui:MakeSlider(options)
+        local slider = Instance.new("Frame")
+        slider.Name = options.Name or "UnnamedSlider"
+        slider.Size = UDim2.new(0, 150, 0, 20)
+        slider.Position = UDim2.new(0.5, -75, 0.5, 25)
+        slider.BackgroundColor3 = Color3.fromRGB(120, 120, 120)
+        slider.BorderSizePixel = 0
+        slider.Parent = contentFrame
+
+        local sliderButton = Instance.new("TextButton")
+        sliderButton.Name = "SliderButton"
+        sliderButton.Size = UDim2.new(0, 20, 0, 20)
+        sliderButton.Position = UDim2.new(0, 0, 0.5, -10)
+        sliderButton.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+        sliderButton.BorderSizePixel = 0
+        sliderButton.Text = ""
+        sliderButton.Parent = slider
+
+        local isDragging = false
+
+        sliderButton.MouseButton1Down:Connect(function()
+            isDragging = true
+        end)
+
+        game:GetService("UserInputService").InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                isDragging = false
+            end
+        end)
+
+        game:GetService("RunService").RenderStepped:Connect(function()
+            if isDragging then
+                local mousePosition = game:GetService("UserInputService"):GetMouseLocation()
+                local relativePosition = mousePosition.X - slider.AbsolutePosition.X
+                local percent = math.clamp(relativePosition / slider.AbsoluteSize.X, 0, 1)
+                sliderButton.Position = UDim2.new(percent, -10, 0.5, -10)
+
+                if options.Callback then
+                    options.Callback(math.floor(percent * (options.Max - options.Min) + options.Min))
+                end
+            end
+        end)
+
+        return slider
+    end
+
+    return ui
+end
+
+return AceryUI
